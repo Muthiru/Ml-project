@@ -1,104 +1,292 @@
 # Face Recognition System
 
-Lightweight GUI and CLI tools for age, gender, race, and emotion recognition using DeepFace and OpenCV.
-
-Table of contents
-- [Overview](#overview)
-- [Features](#features)
-- [Requirements](#requirements)
-- [Installation](#installation)
-- [Running](#running)
-  - [GUI](#gui)
-  - [CLI](#cli)
-- [Project layout](#project-layout)
-- [Data handling & data/raw note](#data-handling--dataraw-note)
-- [Development & Contributing](#development--contributing)
-- [Testing](#testing)
-- [Troubleshooting](#troubleshooting)
-- [License](#license)
-- [Acknowledgements](#acknowledgements)
+Deep learning-based face analysis for age, gender, race, and emotion recognition using DeepFace and OpenCV.
 
 ## Overview
-This repository provides a PyQt5-based GUI and several command-line utilities that perform face analysis (age, gender, race, emotion) using the DeepFace library. It supports single-image analysis, video processing (preview + optional save), and webcam modes.
+
+Command-line tools for facial attribute recognition supporting single images, video files, and live webcam feeds. Includes comprehensive model validation system with automated dataset setup.
 
 ## Features
-- Analyze single images with DeepFace.
-- Process videos frame-by-frame with live preview and optional saving.
-- Live webcam modes (regular and a faster mode).
-- Background threads for non-blocking GUI operations.
+
+- **Single Image Analysis** - Analyze age, gender, race, and emotion from photos
+- **Video Processing** - Process video files with face detection and annotation
+- **Live Webcam** - Real-time face recognition (standard and fast modes)
+- **Model Validation** - Comprehensive validation system with automated dataset setup
+- **Multiple Detectors** - Support for OpenCV, RetinaFace, MTCNN, and more
 
 ## Requirements
+
 - Python 3.8+
-- See `requirements.txt` for the exact list (typically: deepface, opencv-python, PyQt5, numpy, tensorflow or pytorch backend as required).
+- 8GB RAM minimum (16GB recommended)
+- 5GB disk space
+- Webcam ( for live detection)
 
 ## Installation
-From project root:
-```bash
-python -m venv .venv
-# macOS / Linux
-source .venv/bin/activate
-# Windows (PowerShell)
-.venv\Scripts\Activate.ps1
 
+```bash
+# Create virtual environment
+python3 -m venv .venv
+source .venv/bin/activate  # Linux/macOS
+# .venv\Scripts\activate   # Windows
+
+# Install dependencies
 pip install -r requirements.txt
 ```
 
-## Running
+## Usage
 
-### GUI
-From project root:
-```bash
-python src/gui/main_app.py
-```
-UI actions:
-- Load Image — opens file dialog and analyzes the selected image.
-- Load Video — open video file, preview and optionally save processed output.
-- Start Webcam — launches the live webcam script.
+### Single Image Analysis
 
-### CLI
-Analyze a single image:
 ```bash
-python scripts/analyze_image.py /path/to/image.jpg
+python scripts/analyze_image.py <image_path>
 ```
 
-Process a video and save output:
+Example:
 ```bash
-python scripts/analyze_video.py input.mp4 -o output.mp4
+python scripts/analyze_image.py photo.jpg
 ```
 
-Preview a video (no save):
+Output: Age, gender, race, and emotion predictions with confidence scores.
+
+---
+
+### Video Processing
+
 ```bash
-python scripts/analyze_video.py input.mp4 --play
+python scripts/analyze_video.py <input.mp4> <output.mp4> [options]
 ```
 
-Run live webcam:
+Options:
+- `--detector opencv|retinaface|mtcnn` - Face detector (default: opencv)
+- `--interval N` - Process every N frames (default: 30)
+- `--play` - Play video after processing
+
+Example:
+```bash
+python scripts/analyze_video.py video.mp4 output.mp4 --detector retinaface
+```
+
+---
+
+### Live Webcam
+
+**Standard Mode** (2-second updates, detailed info):
 ```bash
 python scripts/live_webcam.py
+```
+
+**Fast Mode** (3-second updates, countdown timer):
+```bash
 python scripts/live_webcam_fast.py
 ```
 
-## Project layout
-- src/gui/main_app.py — PyQt5 GUI and background threads.
-- scripts/analyze_image.py — CLI single-image analyzer.
-- scripts/analyze_video.py — CLI video processing.
-- scripts/live_webcam.py, scripts/live_webcam_fast.py — webcam modes.
-- requirements.txt — Python dependencies.
-- data/ — optional sample data and metadata (may contain a `raw/` folder).
+Controls:
+- Press 's' to save screenshot
+- Press 'q' to quit
 
-## Data handling & data/raw note
-The codebase uses user-supplied image/video paths (file dialogs or CLI args). There are no mandatory hard-coded dependencies on `data/raw`. If you want to remove the `data/raw` folder:
-- Move or archive first:
-  ```bash
-  mv data/raw data/raw.backup
-  ```
-- Or remove:
-  ```bash
-  rm -rf data/raw
-  ```
-If files under `data/raw` are referenced in external notebooks or CI, update those references before deleting.
+---
+
+## Model Validation
+
+Comprehensive validation system for testing model performance.
+
+### 1. Setup Validation Datasets
+
+```bash
+# Download all datasets
+python scripts/setup_validation_datasets.py
+
+# Specific dataset only
+python scripts/setup_validation_datasets.py --datasets emotion
+```
+
+**Kaggle Setup** (first time):
+1. Get API key from https://www.kaggle.com/settings
+2. Download `kaggle.json`
+3. Place in `~/.kaggle/` (Linux/macOS) or `%USERPROFILE%\.kaggle\` (Windows)
+4. Set permissions: `chmod 600 ~/.kaggle/kaggle.json`
+
+### 2. Run Validation
+
+```bash
+# Validate all attributes
+python scripts/validate_model.py
+
+# Specific attributes
+python scripts/validate_model.py --attributes age emotion
+
+# Different detector
+python scripts/validate_model.py --detector retinaface
+```
+
+**Output:** CSV results, confusion matrices, and summary reports in `validation_results/`
+
+---
+
+## Project Structure
+
+```
+Ml project/
+├── scripts/
+│   ├── analyze_image.py           # Single image analysis
+│   ├── analyze_video.py           # Video processing
+│   ├── live_webcam.py             # Real-time detection
+│   ├── live_webcam_fast.py        # Optimized real-time
+│   ├── validate_model.py          # Model validation
+│   └── setup_validation_datasets.py  # Dataset setup
+├── data/
+│   └── validation/                # Validation datasets
+│       ├── age/
+│       ├── emotion/
+│       ├── gender/
+│       └── race/
+├── validation_results/            # Validation output
+├── requirements.txt               # Dependencies
+└── README.md                      # This file
+```
+
+---
+
+## Validation Datasets
+
+| Attribute | Classes | Images | Source |
+|-----------|---------|--------|--------|
+| Age | 8 brackets | 240 | UTKFace |
+| Gender | 2 classes | 40 | UTKFace |
+| Race | 5 classes | 75 | UTKFace |
+| Emotion | 4 emotions | 60 | FER-2013 |
+
+---
+
+## Troubleshooting
+
+**"No module named 'deepface'"**
+```bash
+source .venv/bin/activate
+pip install -r requirements.txt
+```
+
+**"Unable to download from Kaggle"**
+- Setup Kaggle credentials (see Model Validation section)
+
+**"No face detected"**
+- Ensure clear, front-facing face in good lighting
+- Try different detector: `--detector retinaface`
+
+**Webcam not opening**
+- Check camera permissions
+- Close other apps using camera
+- Try different camera index (edit `cv2.VideoCapture(0)` to `cv2.VideoCapture(1)`)
+
+---
+
+## Performance
+
+| Operation | Processing Time | Accuracy |
+|-----------|----------------|----------|
+| Single Image | ~1s (OpenCV) | Varies |
+| Video (per frame) | 0.5-5s | By detector |
+| Emotion Recognition | 58% | 60 images |
+| Age (generous ±1 bracket) | 50-65% | 240 images |
+| Gender | 95-100% | 40 images |
+| Race | 46-88% | 75 images |
+
+---
+
+## Technical Details
+
+**Models:**
+- DeepFace framework with VGG-Face, FaceNet, ArcFace
+- Pre-trained on VGGFace2, MS-Celeb-1M, FER-2013
+
+**Detectors:**
+- OpenCV Haar Cascades (fast, ~0.5s)
+- RetinaFace (accurate, ~5s)
+- MTCNN (balanced, ~2s)
+
+---
+
+
+
+## Acknowledgements
+
+- [DeepFace](https://github.com/serengil/deepface) - Face recognition framework
+- [UTKFace Dataset](https://susanqq.github.io/UTKFace/) - Age, gender, race data
+- [FER-2013](https://www.kaggle.com/datasets/msambare/fer2013) - Emotion recognition data
+
+---
+
+## Author
+
+**Danylo**  
+December 2025
+
+```text
+data/validation/
+├── age/
+│   ├── 0-10/       (15 images per bracket)
+│   ├── 11-20/
+│   ├── 21-30/
+│   ├── 31-40/
+│   ├── 41-50/
+│   ├── 51-60/
+│   ├── 61-70/
+│   └── 71-80/
+├── gender/
+│   ├── Male/       (20 images)
+│   └── Female/     (20 images)
+├── race/
+│   ├── White/      (15 images per category)
+│   ├── Black/
+│   ├── Asian/
+│   ├── Indian/
+│   └── Latino_Hispanic/
+└── emotion/
+    ├── happy/      (15 images per emotion)
+    ├── sad/
+    ├── angry/
+    └── neutral/
+```
+
+**Total:** ~200 validation images across all attributes
+
+### Validation Output
+
+The validation script generates:
+
+1. **Console Report**: Real-time progress and accuracy metrics
+2. **CSV Files**: Detailed prediction results for each image
+   - Format: `{attribute}_results_{detector}_{timestamp}.csv`
+3. **Confusion Matrices**: Visual heatmaps showing prediction performance
+   - Format: `{attribute}_confusion_matrix_{detector}_{timestamp}.png`
+4. **Summary Report**: Text file with overall validation results
+   - Format: `validation_summary_{detector}_{timestamp}.txt`
+
+All outputs are saved to `validation_results/` directory (or custom path with `--output`)
+
+### Understanding Results
+
+**Accuracy Metrics:**
+- **Strict Accuracy**: Exact match between prediction and ground truth
+- **Generous Accuracy** (age only): Allows ±1 age bracket error (e.g., predicting 25 for someone in 21-30 bracket is correct, predicting 35 gets credit for being close)
+
+**Confusion Matrix:**
+- Diagonal cells: Correct predictions
+- Off-diagonal cells: Misclassifications
+- Darker blue: Higher count
+
+**Good Performance Indicators:**
+- Age: >70% strict, >85% generous
+- Gender: >90% strict
+- Emotion: >65% strict (emotions are subjective)
+- Race: >75% strict
+
+### Manual Dataset Setup (Alternative)
+
+If you prefer manual setup or don't have Kaggle access, create the folder structure above and add your own labeled images (10-15 per class recommended).
 
 ## Development & Contributing
-The previous CONTRIBUTING and License sections were placeholders. Use the guidance below as a minimal, accurate contributing workflow to get started.
+
 
 Basic contribution workflow
 1. Fork the repository.

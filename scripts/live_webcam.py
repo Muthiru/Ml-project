@@ -14,17 +14,7 @@ import sys
 
 
 def process_frame_prediction(frame, last_prediction_time, prediction_interval):
-    """
-    Process frame and return predictions
-    
-    Args:
-        frame: Current video frame
-        last_prediction_time: Timestamp of last prediction
-        prediction_interval: Seconds between predictions
-        
-    Returns:
-        Tuple of (age, gender, race, emotion, face_detected, current_time)
-    """
+    """Process frame and return predictions"""
     current_time = time.time()
     predicted_age = None
     predicted_gender = None
@@ -37,7 +27,7 @@ def process_frame_prediction(frame, last_prediction_time, prediction_interval):
             result = DeepFace.analyze(
                 frame, 
                 actions=['age', 'gender', 'race', 'emotion'],
-                enforce_detection=True,  # Changed to True
+                enforce_detection=True,
                 silent=True
             )
             
@@ -50,7 +40,6 @@ def process_frame_prediction(frame, last_prediction_time, prediction_interval):
                 face_detected = True
                 
         except ValueError:
-            # No face detected
             face_detected = False
         except Exception:
             face_detected = False
@@ -60,17 +49,7 @@ def process_frame_prediction(frame, last_prediction_time, prediction_interval):
 
 def draw_predictions_on_frame(frame, face_detected, predicted_age, predicted_gender, 
                               predicted_race, predicted_emotion):
-    """
-    Draw prediction overlays on video frame
-    
-    Args:
-        frame: Video frame to annotate
-        face_detected: Whether a face was detected
-        predicted_age: Predicted age
-        predicted_gender: Predicted gender
-        predicted_race: Predicted race
-        predicted_emotion: Predicted emotion
-    """
+    """Draw prediction overlays on video frame"""
     y_offset = 30
     line_height = 35
     
@@ -79,7 +58,6 @@ def draw_predictions_on_frame(frame, face_detected, predicted_age, predicted_gen
     y_offset += line_height
     
     if face_detected and predicted_age:
-        # Green text when face detected
         cv2.putText(frame, f"Age: {predicted_age} years", (10, y_offset),
                    cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0, 255, 0), 2)
         y_offset += line_height
@@ -95,11 +73,9 @@ def draw_predictions_on_frame(frame, face_detected, predicted_age, predicted_gen
         cv2.putText(frame, f"Emotion: {predicted_emotion}", (10, y_offset),
                    cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
         
-        # Status
         cv2.putText(frame, "Face: DETECTED", (frame.shape[1] - 200, 30),
                    cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
     else:
-        # Red text when no face
         cv2.putText(frame, "No face detected", (10, y_offset),
                    cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
         y_offset += line_height
@@ -107,7 +83,6 @@ def draw_predictions_on_frame(frame, face_detected, predicted_age, predicted_gen
         cv2.putText(frame, "Position your face in frame", (10, y_offset),
                    cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
         
-        # Status
         cv2.putText(frame, "Face: NOT DETECTED", (frame.shape[1] - 250, 30),
                    cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
     

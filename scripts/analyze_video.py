@@ -30,7 +30,7 @@ def _create_writer(output_path, fps, frame_width, frame_height):
 
 
 def _get_predictions_for_frame(frame):
-    """Run DeepFace.analyze and return a list of prediction dicts or empty list on failure."""
+    """Run DeepFace.analyze, return list of predictions or empty list on failure"""
     try:
         results = DeepFace.analyze(
             frame,
@@ -38,7 +38,6 @@ def _get_predictions_for_frame(frame):
             enforce_detection=False,
             silent=True
         )
-        # DeepFace.analyze may return a dict for single face or a list for multiple
         if not results:
             return []
         if isinstance(results, dict):
@@ -56,7 +55,6 @@ def _get_predictions_for_frame(frame):
             })
         return preds
     except Exception:
-        # Caller will handle logging/progress; return empty predictions on error
         return []
 
 
@@ -110,20 +108,17 @@ def _process_frames(cap_handle, out_handle, prediction_interval, total_frames):
 
             frame_count += 1
 
-            # Run predictions at configured interval
             if frame_count % prediction_interval == 1:
                 preds = _get_predictions_for_frame(frame)
                 if preds:
                     last_predictions = dict(enumerate(preds))
                     print(f"Frame {frame_count}/{total_frames}: Detected {len(preds)} face(s)")
 
-            # Annotate latest predictions (if any)
             if last_predictions:
                 _annotate_frame(frame, last_predictions.values())
 
             out_handle.write(frame)
 
-            # Print approximate progress every 10% of total (avoid division by zero)
             chunk = max(1, total_frames // 10)
             if frame_count % chunk == 0:
                 progress = (frame_count / total_frames) * 100
@@ -134,18 +129,7 @@ def _process_frames(cap_handle, out_handle, prediction_interval, total_frames):
 
 
 def process_video(input_path, output_path=None, prediction_interval=30):
-    """
-    Process video file and add face detection with age predictions
-    
-    Args:
-        input_path: Path to input video file
-        output_path: Path to output video file (auto-generated if None)
-        prediction_interval: Number of frames between predictions (default: 30)
-        show_confidence: Whether to show confidence scores
-        
-    Returns:
-        bool: True if successful, False otherwise
-    """
+    """Process video file and add face detection with predictions"""
     
     if not os.path.exists(input_path):
         print(f"Error: Input file not found: {input_path}")
@@ -190,12 +174,7 @@ def process_video(input_path, output_path=None, prediction_interval=30):
 
 
 def play_video(video_path):
-    """
-    Play video file using OpenCV
-    
-    Args:
-        video_path: Path to video file
-    """
+    """Play video file using OpenCV"""
     if not os.path.exists(video_path):
         print(f"Error: Video file not found: {video_path}")
         return

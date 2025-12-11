@@ -17,13 +17,7 @@ WAITING = "Please wait..."
 
 
 def _safe_analyze(frame):
-    """Run DeepFace.analyze safely and normalize return values.
-
-    Returns a tuple (status, result) where status is one of:
-      - 'ok' -> result is a list of face dicts
-      - 'no_face' -> result is an empty list
-      - 'error' -> result is error message string
-    """
+    """Run DeepFace.analyze safely, return (status, result) tuple"""
     try:
         result = DeepFace.analyze(
             frame,
@@ -44,13 +38,13 @@ def _safe_analyze(frame):
 
 
 def _draw_overlay(frame, age, gender, race, emotion, face_currently_detected, processing, time_until_next):
-    """Draw UI overlay on frame and show it. Returns key pressed (int) or -1."""
+    """Draw UI overlay on frame, return key pressed"""
     if face_currently_detected:
         status_text = f"Next update: {time_until_next:.1f}s | Face: DETECTED"
-        status_color = (0, 255, 0)  # Green
+        status_color = (0, 255, 0)
     else:
         status_text = f"Next update: {time_until_next:.1f}s | Face: NOT DETECTED"
-        status_color = (0, 0, 255)  # Red
+        status_color = (0, 0, 255)
 
     cv2.putText(frame, "Face Recognition System", (10, 30),
                cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 255, 255), 2)
@@ -62,13 +56,12 @@ def _draw_overlay(frame, age, gender, race, emotion, face_currently_detected, pr
     y_offset = 70
     line_height = 40
 
-    # Color based on face detection
     if face_currently_detected:
-        text_color = (0, 255, 0)  # Green when face detected
+        text_color = (0, 255, 0)
     elif processing:
-        text_color = (0, 255, 255)  # Yellow when processing
+        text_color = (0, 255, 255)
     else:
-        text_color = (0, 0, 255)  # Red when no face
+        text_color = (0, 0, 255)
 
     cv2.putText(frame, f"Age: {age}", (10, y_offset),
                cv2.FONT_HERSHEY_SIMPLEX, 0.9, text_color, 2)
@@ -85,7 +78,6 @@ def _draw_overlay(frame, age, gender, race, emotion, face_currently_detected, pr
     cv2.putText(frame, f"Emotion: {emotion}", (10, y_offset),
                cv2.FONT_HERSHEY_SIMPLEX, 0.9, text_color, 2)
 
-    # Status with face detection indicator
     cv2.putText(frame, status_text, (10, frame.shape[0] - 50),
                cv2.FONT_HERSHEY_SIMPLEX, 0.6, status_color, 2)
 
@@ -99,7 +91,7 @@ def _draw_overlay(frame, age, gender, race, emotion, face_currently_detected, pr
 
 
 def _update_state_for_frame(state, frame, frame_count, current_time, prediction_interval):
-    """Update mutable state for a frame: handles when to call analyzer and update display texts."""
+    """Update state for frame: call analyzer and update display"""
     time_since_last = current_time - state['last_prediction']
 
     if not state['first_prediction_done'] and frame_count < 30:
@@ -117,10 +109,8 @@ def _update_state_for_frame(state, frame, frame_count, current_time, prediction_
         return
 
     if time_since_last <= prediction_interval:
-        # nothing to do this frame
         return
 
-    # Time to attempt a prediction
     state['processing'] = True
 
     status, result = _safe_analyze(frame)
@@ -158,14 +148,13 @@ def _update_state_for_frame(state, frame, frame_count, current_time, prediction_
         if state['frames_without_face'] == 1:
             print("\nNo face detected - please position your face in frame")
 
-    else:  # error
+    else:
         state['face_currently_detected'] = False
         state['frames_without_face'] += 1
         print(f"Error: {result}")
 
     state['processing'] = False
 
-    # Clear predictions if no face detected for 2 consecutive checks
     if state['frames_without_face'] >= 2 and state['first_prediction_done']:
         state['age'] = "No face detected"
         state['gender'] = "Move closer"

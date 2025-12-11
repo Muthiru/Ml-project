@@ -12,12 +12,7 @@ import sys
 
 
 def analyze_image(image_path):
-    """
-    Analyze face attributes from image file
-    
-    Args:
-        image_path: Path to image file
-    """
+    """Analyze face attributes from image file"""
     if not os.path.exists(image_path):
         print(f"Error: Image not found: {image_path}")
         return
